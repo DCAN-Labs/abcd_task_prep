@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/home/exacloud/lustre1/fnl_lab/code/external/utilities/anaconda2/bin/python
 
 import os, sys
 import ABCD_tfMRI as ABCD

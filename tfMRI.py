@@ -4,7 +4,8 @@ import os, sys
 import ABCD_tfMRI as ABCD
 import shutil
 
-FEATfolder = '/users/r/w/rwatts1/bin/FEAT'
+#FEATfolder = '/users/r/w/rwatts1/bin/FEAT'
+FEATfolder = os.environ("FEATfolder")
 verbose = False
 
 def checkEV(filename, fsfname, EV, verbose=True):
@@ -45,8 +46,8 @@ for subject in sys.argv[2:]:
     # Process SST
     sst1Folder = studyFolder + '/' + subject+'/MNINonLinear/Results/tfMRI_SST1'
     sst2Folder = studyFolder + '/' + subject+'/MNINonLinear/Results/tfMRI_SST2'
-    sst1MR = sst1Folder+'/Movement_Regressors.txt'
-    sst2MR = sst2Folder+'/Movement_Regressors.txt'
+    sst1MR = sst1Folder+'/Movement_Regressors_FNL_preproc_v2.txt'
+    sst2MR = sst2Folder+'/Movement_Regressors_FNL_preproc_v2.txt'
     sstEPrime = studyFolder + '/' + subject+'/unprocessed/EPRIME/'+subject+'_tfMRI_SST1.txt'
 
 
@@ -125,8 +126,8 @@ for subject in sys.argv[2:]:
     # Process MID
     mid1Folder = studyFolder + '/' + subject+'/MNINonLinear/Results/tfMRI_MID1'
     mid2Folder = studyFolder + '/' + subject+'/MNINonLinear/Results/tfMRI_MID2'
-    mid1MR = mid1Folder+'/Movement_Regressors.txt'
-    mid2MR = mid2Folder+'/Movement_Regressors.txt'
+    mid1MR = mid1Folder+'/Movement_Regressors_FNL_preproc_v2.txt'
+    mid2MR = mid2Folder+'/Movement_Regressors_FNL_preproc_v2.txt'
     midEPrime = studyFolder + '/' + subject+'/unprocessed/EPRIME/'+subject+'_tfMRI_MID1.txt'
 
 
@@ -193,8 +194,8 @@ for subject in sys.argv[2:]:
     # Process nBack
     nBack1Folder = studyFolder + '/' + subject+'/MNINonLinear/Results/tfMRI_nBack1'
     nBack2Folder = studyFolder + '/' + subject+'/MNINonLinear/Results/tfMRI_nBack2'
-    nBack1MR = nBack1Folder+'/Movement_Regressors.txt'
-    nBack2MR = nBack2Folder+'/Movement_Regressors.txt'
+    nBack1MR = nBack1Folder+'/Movement_Regressors_FNL_preproc_v2.txt'
+    nBack2MR = nBack2Folder+'/Movement_Regressors_FNL_preproc_v2.txt'
     nBackEPrime = studyFolder + '/' + subject+'/unprocessed/EPRIME/'+subject+'_tfMRI_nBack1.txt'
 
 

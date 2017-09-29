@@ -1,39 +1,75 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 
 import numpy as np
 import pandas as pd
 import sys, io, os
 from readEPrime import ReadEPrimeFile
 
+
+# Extract a single run from a data frame
+def GetRun(dataFrame, run, verbose=True):
+
+    indexC = dataFrame['Procedure[Trial]'].str.contains('WaitScreen', na=False)
+    waitIndex = dataFrame.index[indexC]
+
+    if len(waitIndex)<3:
+        scannerType = "SIEMENS/PHILIPS"
+        startIndices = waitIndex
+        if run>len(startIndices)-1:
+            raise AttributeError('Run not found')
+        startTime = dataFrame['SiemensPad.OnsetTime'][startIndices[run]]
+
+    elif (len(waitIndex) % 16) == 0:
+        scannerType = "GE"
+        indexC = dataFrame['Procedure[Block]'].str.contains('Cue', na=False)
+        startIndices = (dataFrame.index[indexC]-1).intersection(waitIndex) - 5
+        if run>len(startIndices)-1:
+            raise AttributeError('Run not found')
+        startTime = dataFrame['GetReady.RTTime'][startIndices[run]]
+
+    else:
+        raise AttributeError('Run not found')
+
+    if run>len(startIndices):
+        print('***** Asked for run {0}, but only {1} runs in file', run, len(startIndices))
+
+       
+    if verbose:
+        print('Scanner is {0}, start time is {1}'.format(scannerType, startTime))
+
+    startIndex = startIndices[run]
+    if run==len(startIndices)-1:
+        endIndex = len(dataFrame)
+    else:
+        endIndex = startIndices[run+1]
+        
+    if verbose:
+        print('Run {0}, indices {1} to {2}'.format(run, startIndex, endIndex-1))
+    subFrame = dataFrame[startIndex:endIndex]
+
+    return subFrame, startTime
+
+
 def EPrimeCSVtoFSL_nBack(filename, verbose=True):
     dataFrame = ReadEPrimeFile(filename)
+
+    # We have both GetReady and GetReady2. Combine them.
+    dataFrame['GetReady.RTTime'] = dataFrame[['GetReady.RTTime','GetReady2.RTTime']].fillna(0).max(axis=1)
+
+    # We have both CueTarget.OnsetTime and Cue2Back.OnsetTime. Combine them.
+    dataFrame['Cue.OnsetTime'] = dataFrame[['CueTarget.OnsetTime','Cue2Back.OnsetTime']].fillna(0).max(axis=1)
+
     path, fname = os.path.split(filename)
     behave = ''
 
     includeCue = False
     wmDict = {'0Back':'Cue0BackPROC', '2Back':'Cue2BackPROC'}
 
-    indexC = dataFrame['Procedure[Trial]'].str.contains('WaitScreen', na=False)
-    waitIndex = np.flatnonzero(indexC)
-
-    if verbose:
-        print('Found {0} runs'.format(len(waitIndex)))
-
-    for run in range(len(waitIndex)):
+    for run in range(0,2):
         if verbose:
             print('Processing run {0}'.format(run))
     
-        startIndex = waitIndex[run]
-        if run==len(waitIndex)-1:
-           endIndex = len(dataFrame)
-        else:
-            endIndex = waitIndex[run+1]
-        
-        if verbose:
-            print('Run {0}, indices {1} to {2}'.format(run, startIndex, endIndex-1))
-    
-        subFrame = dataFrame[startIndex:endIndex]
-        startTime = subFrame['SiemensPad.OnsetTime'][startIndex]
+        subFrame, startTime = GetRun(dataFrame, run, verbose)
 
         for wm in wmDict:
             wmLoad = subFrame['Procedure[Block]'].str.contains(wmDict[wm], na=False)
@@ -44,8 +80,7 @@ def EPrimeCSVtoFSL_nBack(filename, verbose=True):
                 indices = (subFrame.index[matchStim]-1).intersection(wmIndices)
 
                 if includeCue:
-                    # Alternative is CueTarget.OnsetTime and Cue2Back.OnsetTime
-                    trialTime = (subFrame.loc[indices, 'CueFix.OffsetTime'] - startTime)*0.001
+                    trialTime = (subFrame.loc[indices, 'Cue.OnsetTime'] - startTime)*0.001
                     duration = 27.5
                 else:
                     trialTime = (subFrame.loc[indices+1, 'Stim.OnsetTime'] - startTime)*0.001
@@ -58,7 +93,7 @@ def EPrimeCSVtoFSL_nBack(filename, verbose=True):
                 FSLoutput['duration']=duration
                 FSLoutput['value']=1.0
 
-                FSLoutput.to_csv(path+'/{0}-{1}-{2}.txt'.format(wm,emotion,run+1), \
+                FSLoutput.to_csv(os.path.join(path,'{0}-{1}-{2}.txt'.format(wm,emotion,run+1)), \
                                  header=False, index=False, sep='\t', float_format='%.3f')
 
    
@@ -74,7 +109,7 @@ def EPrimeCSVtoFSL_nBack(filename, verbose=True):
             FSLoutput['duration']=2.5
             FSLoutput['value']=1.0
 
-            FSLoutput.to_csv(path+'/nBack-Instructions-{0}.txt'.format(run+1), \
+            FSLoutput.to_csv(os.path.join(path,'nBack-Instructions-{0}.txt'.format(run+1)), \
                                  header=False, index=False, sep='\t', float_format='%.3f')
 
         # Behavior data: Success rates and reaction times for each run and WM load

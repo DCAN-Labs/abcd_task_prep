@@ -1,6 +1,13 @@
 import io, os, sys
 import pandas as pd
 
+
+# Read an Prime file and return a Pandas data frame
+# Handles:
+#    UTF-8 and UTF-16 encoding
+#    Comma and tab delimiters
+#    Different numbers of header lines
+
 def ReadEPrimeFile(filename):
     # Check file encoding
     good = False
@@ -20,7 +27,7 @@ def ReadEPrimeFile(filename):
     headerLines = 0
     good = False
     for line in io.open(filename, encoding=encoding).readlines():
-        if 'Subject' in line:
+        if 'ExperimentName' in line:
             for testDelimiter in {',', '\t'}:
                 if line.count(testDelimiter)>0:
                     delimiter = testDelimiter
@@ -36,6 +43,7 @@ def ReadEPrimeFile(filename):
 
     dataFrame = pd.read_csv(filename, header=headerLines, sep=delimiter, encoding=encoding)
 
+
     #print(dataFrame)
 
     try:
@@ -48,3 +56,5 @@ def ReadEPrimeFile(filename):
         raise IOError('Major problem')
 
     return dataFrame
+
+

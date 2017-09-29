@@ -4,7 +4,6 @@ import os, sys
 import ABCD_tfMRI as ABCD
 import shutil
 
-#FEATfolder = '/users/r/w/rwatts1/bin/FEAT'
 FEATfolder = os.environ("FEATfolder")
 verbose = False
 
@@ -60,15 +59,15 @@ for subject in sys.argv[2:]:
     if good:
         try:
             # Create censor file for each run
-            propCensor1 = ABCD.createCensorFile(sst1MR)
-            propCensor2 = ABCD.createCensorFile(sst2MR)
+            propCensor1, scanner = ABCD.createCensorFile(sst1MR)
+            propCensor2, scanner = ABCD.createCensorFile(sst2MR)
 
             # Create EVs
             shutil.copy(sstEPrime, EVfolder+'/')
 
             behave = ABCD.EPrimeCSVtoFSL_SST(EVfolder+'/'+subject+'_tfMRI_SST1.txt', verbose=verbose)
 
-    
+
             header = ('subject,task,censor1,censor2,' +
                       'nCorrectStop1,nIncorrectStop1,nStopTooEarly1,nCorrectGo1,nIncorrectGo1,' +
                       'nLateCorrectGo1,nLateIncorrectGo1,nNoGoResponse1,' +
@@ -86,8 +85,9 @@ for subject in sys.argv[2:]:
 
 
             # Copy template model file, modify if necessary
-            shutil.copy(FEATfolder+'/tfMRI_SST1_hp200_s4_level1.fsf', sst1Folder)
-            shutil.copy(FEATfolder+'/tfMRI_SST2_hp200_s4_level1.fsf', sst2Folder)
+            if scanner == 'Siemens':
+                shutil.copy(FEATfolder+'/siemens/tfMRI_SST1_hp200_s4_level1.fsf', sst1Folder)
+                shutil.copy(FEATfolder+'/siemens/tfMRI_SST2_hp200_s4_level1.fsf', sst2Folder)
 
 
             # Remove EVs with no events
@@ -140,8 +140,8 @@ for subject in sys.argv[2:]:
     if good:
         try:
             # Create censor file for each run
-            propCensor1 = ABCD.createCensorFile(mid1MR)
-            propCensor2 = ABCD.createCensorFile(mid2MR)
+            propCensor1, scanner = ABCD.createCensorFile(mid1MR)
+            propCensor2, scanner = ABCD.createCensorFile(mid2MR)
 
             shutil.copy(midEPrime, EVfolder)
 
@@ -169,8 +169,9 @@ for subject in sys.argv[2:]:
 
 
             # Copy template model file
-            shutil.copy(FEATfolder+'/tfMRI_MID1_hp200_s4_level1.fsf', mid1Folder)
-            shutil.copy(FEATfolder+'/tfMRI_MID2_hp200_s4_level1.fsf', mid2Folder)
+            if scanner == 'Siemens':
+                shutil.copy(FEATfolder+'/siemens/tfMRI_MID1_hp200_s4_level1.fsf', mid1Folder)
+                shutil.copy(FEATfolder+'/siemens/tfMRI_MID2_hp200_s4_level1.fsf', mid2Folder)
 
 
             # Create folder for second level analysis and copy the template model file
@@ -208,8 +209,8 @@ for subject in sys.argv[2:]:
     if good:
         try:
             # Create censor file for each run
-            propCensor1 = ABCD.createCensorFile(nBack1MR)
-            propCensor2 = ABCD.createCensorFile(nBack2MR)
+            propCensor1, scanner = ABCD.createCensorFile(nBack1MR)
+            propCensor2, scanner = ABCD.createCensorFile(nBack2MR)
 
             shutil.copy(nBackEPrime, EVfolder)
 
@@ -228,8 +229,13 @@ for subject in sys.argv[2:]:
 
 
             # Copy template model file
-            shutil.copy(FEATfolder+'/tfMRI_nBack1_hp200_s4_level1.fsf', nBack1Folder)
-            shutil.copy(FEATfolder+'/tfMRI_nBack2_hp200_s4_level1.fsf', nBack2Folder)
+            if scanner == 'Siemens':
+                shutil.copy(FEATfolder+'/siemens/tfMRI_nBack1_hp200_s4_level1.fsf', nBack1Folder)
+                shutil.copy(FEATfolder+'/siemens/tfMRI_nBack2_hp200_s4_level1.fsf', nBack2Folder)
+            else:
+                shutil.copy(FEATfolder+'/GE/tfMRI_nBack1_hp200_s4_level1.fsf', nBack1Folder)
+                shutil.copy(FEATfolder+'/GE/tfMRI_nBack2_hp200_s4_level1.fsf', nBack2Folder)
+
 
 
             # Create folder for second level analysis and copy the template model file

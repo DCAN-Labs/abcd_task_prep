@@ -2943,13 +2943,13 @@ set fmri(con_real15.13) 0
 set fmri(con_real15.14) 0
 
 # Real contrast_real vector 15 element 15
-set fmri(con_real15.15) -0.5
+set fmri(con_real15.15) 0.5
 
 # Real contrast_real vector 15 element 16
 set fmri(con_real15.16) 0
 
 # Real contrast_real vector 15 element 17
-set fmri(con_real15.17) 0.5
+set fmri(con_real15.17) -0.5
 
 # Real contrast_real vector 15 element 18
 set fmri(con_real15.18) 0
@@ -2961,13 +2961,13 @@ set fmri(con_real15.19) 0
 set fmri(con_real15.20) 0
 
 # Real contrast_real vector 15 element 21
-set fmri(con_real15.21) -0.5
+set fmri(con_real15.21) 0.5
 
 # Real contrast_real vector 15 element 22
 set fmri(con_real15.22) 0
 
 # Real contrast_real vector 15 element 23
-set fmri(con_real15.23) 0.5
+set fmri(con_real15.23) -0.5
 
 # Real contrast_real vector 15 element 24
 set fmri(con_real15.24) 0

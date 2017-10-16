@@ -4866,19 +4866,19 @@ set fmri(con_orig15.6) 0
 set fmri(con_orig15.7) 0
 
 # Real contrast_orig vector 15 element 8
-set fmri(con_orig15.8) -0.5
+set fmri(con_orig15.8) 0.5
 
 # Real contrast_orig vector 15 element 9
-set fmri(con_orig15.9) 0.5
+set fmri(con_orig15.9) -0.5
 
 # Real contrast_orig vector 15 element 10
 set fmri(con_orig15.10) 0
 
 # Real contrast_orig vector 15 element 11
-set fmri(con_orig15.11) -0.5
+set fmri(con_orig15.11) 0.5
 
 # Real contrast_orig vector 15 element 12
-set fmri(con_orig15.12) 0.5
+set fmri(con_orig15.12) -0.5
 
 # Real contrast_orig vector 15 element 13
 set fmri(con_orig15.13) 0

@@ -4,7 +4,11 @@ import os, sys
 import ABCD_tfMRI as ABCD
 import shutil
 
-FEATfolder = os.environ("FEATfolder")
+
+#FEATfolder = '/users/r/w/rwatts1/bin/FEAT'
+#FEATfolder = os.environ["FEATfolder"]
+FEATfolder = '/home/exacloud/lustre1/fnl_lab/code/internal/pipelines/HCP_generic_srun/ABCD_tfMRI/FEAT'
+
 verbose = False
 
 def checkEV(filename, fsfname, EV, verbose=True):
@@ -32,22 +36,26 @@ nBadSST = 0
 nMissingSST = 0
 
 studyFolder = sys.argv[1]
+print("study folder is:")
+print(studyFolder)
+print("subject ID is:")
+print(sys.argv[2:])
 
 
 for subject in sys.argv[2:]:
 
     # Make an EVs folder and copy the Prime files into it
-    EVfolder = studyFolder + '/' + subject+'/MNINonLinear/Results/EVs'
+    EVfolder = studyFolder + '/' + subject + '/MNINonLinear/Results/EVs'
     if not os.path.exists(EVfolder):
         os.makedirs(EVfolder)
 
 
     # Process SST
-    sst1Folder = studyFolder + '/' + subject+'/MNINonLinear/Results/tfMRI_SST1'
-    sst2Folder = studyFolder + '/' + subject+'/MNINonLinear/Results/tfMRI_SST2'
+    sst1Folder = studyFolder + '/' + subject + '/MNINonLinear/Results/tfMRI_SST1'
+    sst2Folder = studyFolder + '/' + subject + '/MNINonLinear/Results/tfMRI_SST2'
     sst1MR = sst1Folder+'/Movement_Regressors_FNL_preproc_v2.txt'
     sst2MR = sst2Folder+'/Movement_Regressors_FNL_preproc_v2.txt'
-    sstEPrime = studyFolder + '/' + subject+'/unprocessed/EPRIME/'+subject+'_tfMRI_SST1.txt'
+    sstEPrime = studyFolder + '/' + subject + '/unprocessed/EPRIME/' + subject + '_tfMRI_SST1.txt'
 
 
     good = True
@@ -65,7 +73,7 @@ for subject in sys.argv[2:]:
             # Create EVs
             shutil.copy(sstEPrime, EVfolder+'/')
 
-            behave = ABCD.EPrimeCSVtoFSL_SST(EVfolder+'/'+subject+'_tfMRI_SST1.txt', verbose=verbose)
+            behave = ABCD.EPrimeCSVtoFSL_SST(EVfolder+'/' + subject + '_tfMRI_SST1.txt', verbose=verbose)
 
 
             header = ('subject,task,censor1,censor2,' +
@@ -88,6 +96,9 @@ for subject in sys.argv[2:]:
             if scanner == 'Siemens':
                 shutil.copy(FEATfolder+'/siemens/tfMRI_SST1_hp200_s4_level1.fsf', sst1Folder)
                 shutil.copy(FEATfolder+'/siemens/tfMRI_SST2_hp200_s4_level1.fsf', sst2Folder)
+            else:
+                shutil.copy(FEATfolder+'/GE/tfMRI_SST1_hp200_s4_level1.fsf', sst1Folder)
+                shutil.copy(FEATfolder+'/GE/tfMRI_SST2_hp200_s4_level1.fsf', sst2Folder)
 
 
             # Remove EVs with no events
@@ -95,13 +106,13 @@ for subject in sys.argv[2:]:
             for run in {1,2}:
                 for event in sstEV:
                     EVfile = '{0}/{1}-{2}.txt'.format(EVfolder,event,run)
-                    fsf = studyFolder + '/' + subject+'/MNINonLinear/Results/tfMRI_SST{0}/tfMRI_SST{0}_hp200_s4_level1.fsf'.format(run)
+                    fsf = studyFolder + '/' + subject + '/MNINonLinear/Results/tfMRI_SST{0}/tfMRI_SST{0}_hp200_s4_level1.fsf'.format(run)
                     checkEV(EVfile, fsf, sstEV[event], verbose=verbose)
 
             # Create folder for second level analysis and copy the template model file
-            if os.path.exists(studyFolder + '/' + subject+'/MNINonLinear/Results/tfMRI_SST')==False:
-                os.makedirs(studyFolder + '/' + subject+'/MNINonLinear/Results/tfMRI_SST')
-            shutil.copy(FEATfolder+'/tfMRI_SST_hp200_s4_level2.fsf', studyFolder + '/' + subject+'/MNINonLinear/Results/tfMRI_SST')
+            if os.path.exists(studyFolder + '/' + subject + '/MNINonLinear/Results/tfMRI_SST')==False:
+                os.makedirs(studyFolder + '/' + subject + '/MNINonLinear/Results/tfMRI_SST')
+            shutil.copy(FEATfolder+'/tfMRI_SST_hp200_s4_level2.fsf', studyFolder + '/' + subject + '/MNINonLinear/Results/tfMRI_SST')
             nGoodSST += 1
 
         except IOError:
@@ -124,11 +135,11 @@ for subject in sys.argv[2:]:
         nMissingSST += 1
 
     # Process MID
-    mid1Folder = studyFolder + '/' + subject+'/MNINonLinear/Results/tfMRI_MID1'
-    mid2Folder = studyFolder + '/' + subject+'/MNINonLinear/Results/tfMRI_MID2'
+    mid1Folder = studyFolder + '/' + subject + '/MNINonLinear/Results/tfMRI_MID1'
+    mid2Folder = studyFolder + '/' + subject + '/MNINonLinear/Results/tfMRI_MID2'
     mid1MR = mid1Folder+'/Movement_Regressors_FNL_preproc_v2.txt'
     mid2MR = mid2Folder+'/Movement_Regressors_FNL_preproc_v2.txt'
-    midEPrime = studyFolder + '/' + subject+'/unprocessed/EPRIME/'+subject+'_tfMRI_MID1.txt'
+    midEPrime = studyFolder + '/' + subject + '/unprocessed/EPRIME/' + subject + '_tfMRI_MID1.txt'
 
 
     good = True
@@ -146,7 +157,7 @@ for subject in sys.argv[2:]:
             shutil.copy(midEPrime, EVfolder)
 
             # Create EVs
-            behave = ABCD.EPrimeCSVtoFSL_MID(EVfolder+'/'+subject+'_tfMRI_MID1.txt', verbose=verbose)
+            behave = ABCD.EPrimeCSVtoFSL_MID(EVfolder+'/' + subject + '_tfMRI_MID1.txt', verbose=verbose)
 
             header = ('subject,task,censor1,censor2,' +
                       'WinBig-Success-1,WinBig-Failure-1,' +
@@ -172,12 +183,15 @@ for subject in sys.argv[2:]:
             if scanner == 'Siemens':
                 shutil.copy(FEATfolder+'/siemens/tfMRI_MID1_hp200_s4_level1.fsf', mid1Folder)
                 shutil.copy(FEATfolder+'/siemens/tfMRI_MID2_hp200_s4_level1.fsf', mid2Folder)
+            else:
+                shutil.copy(FEATfolder+'/GE/tfMRI_MID1_hp200_s4_level1.fsf', mid1Folder)
+                shutil.copy(FEATfolder+'/GE/tfMRI_MID2_hp200_s4_level1.fsf', mid2Folder)
 
 
             # Create folder for second level analysis and copy the template model file
-            if os.path.exists(studyFolder + '/' + subject+'/MNINonLinear/Results/tfMRI_MID')==False:
-                os.makedirs(studyFolder + '/' + subject+'/MNINonLinear/Results/tfMRI_MID')
-            shutil.copy(FEATfolder+'/tfMRI_MID_hp200_s4_level2.fsf', studyFolder + '/' + subject+'/MNINonLinear/Results/tfMRI_MID')
+            if os.path.exists(studyFolder + '/' + subject + '/MNINonLinear/Results/tfMRI_MID')==False:
+                os.makedirs(studyFolder + '/' + subject + '/MNINonLinear/Results/tfMRI_MID')
+            shutil.copy(FEATfolder+'/tfMRI_MID_hp200_s4_level2.fsf', studyFolder + '/' + subject + '/MNINonLinear/Results/tfMRI_MID')
 
 
         except IOError:
@@ -193,11 +207,11 @@ for subject in sys.argv[2:]:
             print('********** AttributeError raised by MID on {0}'.format(subject))
 
     # Process nBack
-    nBack1Folder = studyFolder + '/' + subject+'/MNINonLinear/Results/tfMRI_nBack1'
-    nBack2Folder = studyFolder + '/' + subject+'/MNINonLinear/Results/tfMRI_nBack2'
+    nBack1Folder = studyFolder + '/' + subject + '/MNINonLinear/Results/tfMRI_nBack1'
+    nBack2Folder = studyFolder + '/' + subject + '/MNINonLinear/Results/tfMRI_nBack2'
     nBack1MR = nBack1Folder+'/Movement_Regressors_FNL_preproc_v2.txt'
     nBack2MR = nBack2Folder+'/Movement_Regressors_FNL_preproc_v2.txt'
-    nBackEPrime = studyFolder + '/' + subject+'/unprocessed/EPRIME/'+subject+'_tfMRI_nBack1.txt'
+    nBackEPrime = studyFolder + '/' + subject + '/unprocessed/EPRIME/' + subject + '_tfMRI_nBack1.txt'
 
 
     good = True
@@ -215,7 +229,7 @@ for subject in sys.argv[2:]:
             shutil.copy(nBackEPrime, EVfolder)
 
             # Create EVs
-            behave = ABCD.EPrimeCSVtoFSL_nBack(EVfolder+'/'+subject+'_tfMRI_nBack1.txt', verbose=verbose)
+            behave = ABCD.EPrimeCSVtoFSL_nBack(EVfolder+'/' + subject + '_tfMRI_nBack1.txt', verbose=verbose)
 
             header = ('subject,task,censor1,censor2,' +
                       '0-Back-Acc-1,0-Back-RT-1,2-Back-Acc-1,2-Back-RT-1,' +
@@ -239,9 +253,9 @@ for subject in sys.argv[2:]:
 
 
             # Create folder for second level analysis and copy the template model file
-            if os.path.exists(studyFolder + '/' + subject+'/MNINonLinear/Results/tfMRI_nBack')==False:
-                os.makedirs(studyFolder + '/' + subject+'/MNINonLinear/Results/tfMRI_nBack')
-            shutil.copy(FEATfolder+'/tfMRI_nBack_hp200_s4_level2.fsf', studyFolder + '/' + subject+'/MNINonLinear/Results/tfMRI_nBack')
+            if os.path.exists(studyFolder + '/' + subject + '/MNINonLinear/Results/tfMRI_nBack')==False:
+                os.makedirs(studyFolder + '/' + subject + '/MNINonLinear/Results/tfMRI_nBack')
+            shutil.copy(FEATfolder+'/tfMRI_nBack_hp200_s4_level2.fsf', studyFolder + '/' + subject + '/MNINonLinear/Results/tfMRI_nBack')
 
 
 

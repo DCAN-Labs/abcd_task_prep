@@ -1,4 +1,3 @@
-
 # FEAT version number
 set fmri(version) 6.00
 
@@ -536,7 +535,7 @@ set fmri(shape5) 3
 # 4 : Gamma basis functions
 # 5 : Sine basis functions
 # 6 : FIR basis functions
-set fmri(convolve5) 2
+set fmri(convolve5) 3
 
 # Convolve phase (EV 5)
 set fmri(convolve_phase5) 0
@@ -664,7 +663,7 @@ set fmri(shape7) 3
 # 4 : Gamma basis functions
 # 5 : Sine basis functions
 # 6 : FIR basis functions
-set fmri(convolve7) 2
+set fmri(convolve7) 3
 
 # Convolve phase (EV 7)
 set fmri(convolve_phase7) 0

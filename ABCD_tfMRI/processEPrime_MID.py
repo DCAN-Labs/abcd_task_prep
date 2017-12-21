@@ -66,9 +66,10 @@ def EPrimeCSVtoFSL_MID(filename, verbose=True):
             label = subFrame['Cue'].str.contains(trialType, na=False)
             indices = subFrame.index[label]
             trialTime = (subFrame.loc[indices, 'Cue.OnsetTime'] - startTime)*0.001
-            trialDuration = (subFrame.loc[indices, 'Cue.Duration']
-                           + subFrame.loc[indices, 'Anticipation.Duration']
-                           + subFrame.loc[indices, 'Probe.Duration'])*0.001
+            #trialDuration = (subFrame.loc[indices, 'Cue.Duration']
+            #               + subFrame.loc[indices, 'Anticipation.Duration']
+            #               + subFrame.loc[indices, 'Probe.Duration'])*0.001
+            trialDuration = 0.0
 
             if verbose:
                 print('{0:20} {1} {2} trials'.format(trialType, run+1, len(trialTime)))
@@ -91,7 +92,8 @@ def EPrimeCSVtoFSL_MID(filename, verbose=True):
    
                 if len(responseIndices)>0:
                     FSLoutput = pd.DataFrame(trialTime)
-                    FSLoutput['duration']=subFrame.loc[indices, 'Feedback.Duration']*0.001
+                    #FSLoutput['duration']=subFrame.loc[indices, 'Feedback.Duration']*0.001
+                    FSLoutput['duration'] = 0.0
                     FSLoutput['value']=1.0
 
                     FSLoutput.to_csv(os.path.join(path,'{0}-{1}-{2}.txt'.format(trialType, response, run+1)), \

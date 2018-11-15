@@ -12,7 +12,8 @@ def createCensorFile(filename):
     filterFile = True
 
     path, fname = os.path.split(filename)
-
+    # filename is now a directory higher than it originally was - AP 20180926
+    path = os.path.dirname(path)
     #print('Creating censor file based on {0}'.format(path))
 
     mr = np.genfromtxt(filename)

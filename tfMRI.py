@@ -27,7 +27,7 @@ def checkEV(filename, fsfname, EV, verbose=True):
 try:
     filename = sys.argv[1]
 except IndexError:
-    print("Usage: {0} studyFolder subject1 <subject2> <subject3>".format(sys.argv[0]))
+    print("Usage: {0} studyFolder eprimeFolder subject session".format(sys.argv[0]))
     sys.exit(1)
 
 
@@ -38,238 +38,247 @@ nMissingSST = 0
 studyFolder = sys.argv[1]
 print("study folder is:")
 print(studyFolder)
+eprimeFolder = sys.argv[2]
+print("eprime folder is:")
+print(eprimeFolder)
+subject = 'sub-' + sys.argv[3]
 print("subject ID is:")
-print(sys.argv[2:])
+print(subject)
+session = 'ses-' + sys.argv[4]
+print("session is:")
+print(session)
 
 
-for subject in sys.argv[2:]:
+# Make an EVs folder and copy the Prime files into it
+EVfolder = studyFolder + '/MNINonLinear/Results/EVs'
+if not os.path.exists(EVfolder):
+    os.makedirs(EVfolder)
 
-    # Make an EVs folder and copy the Prime files into it
-    EVfolder = studyFolder + '/' + subject + '/MNINonLinear/Results/EVs'
-    if not os.path.exists(EVfolder):
-        os.makedirs(EVfolder)
-
-
-    # Process SST
-    sst1Folder = studyFolder + '/' + subject + '/MNINonLinear/Results/tfMRI_SST1'
-    sst2Folder = studyFolder + '/' + subject + '/MNINonLinear/Results/tfMRI_SST2'
-    sst1MR = sst1Folder+'/Movement_Regressors_FNL_preproc_v2.txt'
-    sst2MR = sst2Folder+'/Movement_Regressors_FNL_preproc_v2.txt'
-    sstEPrime = studyFolder + '/' + subject + '/unprocessed/EPRIME/' + subject + '_tfMRI_SST1.txt'
+# string from task folder to filtered movement regressors
+MR_path = '/DCANBOLDProc_v4.0.0/DCANBOLDProc_v4.0.0_bs18.582_25.7263_filtered_Movement_Regressors.txt'
 
 
-    good = True
-    for file in {sst1MR, sst2MR, sstEPrime}:
-        if os.path.isfile(file)==False:
-            print('No file '+file)
-            good = False
-
-    if good:
-        try:
-            # Create censor file for each run
-            propCensor1, scanner = ABCD.createCensorFile(sst1MR)
-            propCensor2, scanner = ABCD.createCensorFile(sst2MR)
-
-            # Create EVs
-            shutil.copy(sstEPrime, EVfolder+'/')
-
-            behave = ABCD.EPrimeCSVtoFSL_SST(EVfolder+'/' + subject + '_tfMRI_SST1.txt', verbose=verbose)
+# Process SST
+sst1Folder = studyFolder + '/MNINonLinear/Results/task-SST01'
+sst2Folder = studyFolder + '/MNINonLinear/Results/task-SST02'
+sst1MR = sst1Folder + MR_path 
+sst2MR = sst2Folder + MR_path
+#sstEPrime = studyFolder + '/' + subject + '/unprocessed/EPRIME/' + subject + '_tfMRI_SST1.txt'
+sstEPrime = eprimeFolder + '/' + subject + '/' + session + '/func/' + subject + '_' + session + '_task-SST_run-01_bold_EventRelatedInformation.txt'
 
 
-            header = ('subject,task,censor1,censor2,' +
-                      'nCorrectStop1,nIncorrectStop1,nStopTooEarly1,nCorrectGo1,nIncorrectGo1,' +
-                      'nLateCorrectGo1,nLateIncorrectGo1,nNoGoResponse1,' +
-                      'RTCorrectGo1,SSDCorrect1,SSDIncorrect1,' +
-                      'nCorrectStop2,nIncorrectStop2,nStopTooEarly2,nCorrectGo2,nIncorrectGo2,' +
-                      'nLateCorrectGo2,nLateIncorrectGo2,nNoGoResponse2,' +
-                      'RTCorrectGo2,SSDCorrect2,SSDIncorrect2,WrongButton,')
+good = True
+for file in {sst1MR, sst2MR, sstEPrime}:
+    if os.path.isfile(file)==False:
+        print('No file '+file)
+        good = False
 
-            if os.path.exists('log-sst.csv')==False:
-                with open('log-sst.csv', 'w') as out:
-                    out.write(header+'\n')
+if good:
+    try:
+        # Create censor file for each run
+        propCensor1, scanner = ABCD.createCensorFile(sst1MR)
+        propCensor2, scanner = ABCD.createCensorFile(sst2MR)
 
-            with open('log-sst.csv', 'a') as out:
-                out.write('{0},sst,{1:.3f},{2:.3f},{3}\n'.format(subject,propCensor1, propCensor2, behave))
+        # Create EVs
+        shutil.copy(sstEPrime, EVfolder+'/')
 
-
-            # Copy template model file, modify if necessary
-            if scanner == 'Siemens':
-                shutil.copy(FEATfolder+'/siemens/tfMRI_SST1_hp200_s4_level1.fsf', sst1Folder)
-                shutil.copy(FEATfolder+'/siemens/tfMRI_SST2_hp200_s4_level1.fsf', sst2Folder)
-            else:
-                shutil.copy(FEATfolder+'/GE/tfMRI_SST1_hp200_s4_level1.fsf', sst1Folder)
-                shutil.copy(FEATfolder+'/GE/tfMRI_SST2_hp200_s4_level1.fsf', sst2Folder)
+        behave = ABCD.EPrimeCSVtoFSL_SST(EVfolder+'/' + subject + '_' + session +  '_task-SST_run-01_bold_EventRelatedInformation.txt', verbose=verbose)
 
 
-            # Remove EVs with no events
-            sstEV = {'IncorrectGo':3, 'LateCorrectGo':4, 'LateIncorrectGo':5, 'NoGoResponse':6, 'StopTooEarly':7}
-            for run in {1,2}:
-                for event in sstEV:
-                    EVfile = '{0}/{1}-{2}.txt'.format(EVfolder,event,run)
-                    fsf = studyFolder + '/' + subject + '/MNINonLinear/Results/tfMRI_SST{0}/tfMRI_SST{0}_hp200_s4_level1.fsf'.format(run)
-                    checkEV(EVfile, fsf, sstEV[event], verbose=verbose)
+        header = ('subject,task,censor1,censor2,' +
+                  'nCorrectStop1,nIncorrectStop1,nStopTooEarly1,nCorrectGo1,nIncorrectGo1,' +
+                  'nLateCorrectGo1,nLateIncorrectGo1,nNoGoResponse1,' +
+                  'RTCorrectGo1,SSDCorrect1,SSDIncorrect1,' +
+                  'nCorrectStop2,nIncorrectStop2,nStopTooEarly2,nCorrectGo2,nIncorrectGo2,' +
+                  'nLateCorrectGo2,nLateIncorrectGo2,nNoGoResponse2,' +
+                  'RTCorrectGo2,SSDCorrect2,SSDIncorrect2,WrongButton,')
 
-            # Create folder for second level analysis and copy the template model file
-            if os.path.exists(studyFolder + '/' + subject + '/MNINonLinear/Results/tfMRI_SST')==False:
-                os.makedirs(studyFolder + '/' + subject + '/MNINonLinear/Results/tfMRI_SST')
-            shutil.copy(FEATfolder+'/tfMRI_SST_hp200_s4_level2.fsf', studyFolder + '/' + subject + '/MNINonLinear/Results/tfMRI_SST')
-            nGoodSST += 1
+        if os.path.exists('log-sst.csv')==False:
+            with open('log-sst.csv', 'w') as out:
+                out.write(header+'\n')
 
-        except IOError:
-            print('********** IOError raised by SST on {0}'.format(subject))
-            nBadSST += 1
-
-        except KeyError:
-            print('********** KeyError raised by SST on {0}'.format(subject))
-            nBadSST += 1
-
-	except ValueError:
-            print('********** ValueError raised by SST on {0}'.format(subject))
-            nBadSST +=1
-
-	except AttributeError:
-            print('********** AttributeError raised by SST on {0}'.format(subject))
-            nBadSST +=1
-
-    else:
-        nMissingSST += 1
-
-    # Process MID
-    mid1Folder = studyFolder + '/' + subject + '/MNINonLinear/Results/tfMRI_MID1'
-    mid2Folder = studyFolder + '/' + subject + '/MNINonLinear/Results/tfMRI_MID2'
-    mid1MR = mid1Folder+'/Movement_Regressors_FNL_preproc_v2.txt'
-    mid2MR = mid2Folder+'/Movement_Regressors_FNL_preproc_v2.txt'
-    midEPrime = studyFolder + '/' + subject + '/unprocessed/EPRIME/' + subject + '_tfMRI_MID1.txt'
+        with open('log-sst.csv', 'a') as out:
+            out.write('{0},sst,{1:.3f},{2:.3f},{3}\n'.format(subject,propCensor1, propCensor2, behave))
 
 
-    good = True
-    for file in {mid1MR, mid2MR, midEPrime}:
-        if os.path.isfile(file)==False:
-            print('No file '+file)
-            good = False
-
-    if good:
-        try:
-            # Create censor file for each run
-            propCensor1, scanner = ABCD.createCensorFile(mid1MR)
-            propCensor2, scanner = ABCD.createCensorFile(mid2MR)
-
-            shutil.copy(midEPrime, EVfolder)
-
-            # Create EVs
-            behave = ABCD.EPrimeCSVtoFSL_MID(EVfolder+'/' + subject + '_tfMRI_MID1.txt', verbose=verbose)
-
-            header = ('subject,task,censor1,censor2,' +
-                      'WinBig-Success-1,WinBig-Failure-1,' +
-                      'WinSmall-Success-1,WinSmall-Failure-1,' +
-                      'Neutral-Success-1,Neutral-Failure-1,' +
-                      'LoseSmall-Success-1,LoseSmall-Failure-1,' +
-                      'LoseBig-Success-1,LoseBig-Failure-1,' +
-                      'WinBig-Success-2,WinBig-Failure-2,' +
-                      'WinSmall-Success-2,WinSmall-Failure-2,' +
-                      'Neutral-Success-2,Neutral-Failure-2,' +
-                      'LoseSmall-Success-2,LoseSmall-Failure-2,' +
-                      'LoseBig-Success-2,LoseBig-Failure-2,')
-
-            if os.path.exists('log-mid.csv')==False:
-                with open("log-mid.csv", "w") as out:
-                    out.write(header+'\n')
-
-            with open("log-mid.csv", "a") as out:
-                out.write('{0},mid,{1:.3f},{2:.3f},{3}\n'.format(subject,propCensor1, propCensor2, behave))
+        # Copy template model file, modify if necessary
+        if scanner == 'Siemens':
+            shutil.copy(FEATfolder+'/siemens/task-SST01_hp200_s4_level1.fsf', sst1Folder)
+            shutil.copy(FEATfolder+'/siemens/task-SST02_hp200_s4_level1.fsf', sst2Folder)
+        else:
+            shutil.copy(FEATfolder+'/GE/task-SST01_hp200_s4_level1.fsf', sst1Folder)
+            shutil.copy(FEATfolder+'/GE/task-SST02_hp200_s4_level1.fsf', sst2Folder)
 
 
-            # Copy template model file
-            if scanner == 'Siemens':
-                shutil.copy(FEATfolder+'/siemens/tfMRI_MID1_hp200_s4_level1.fsf', mid1Folder)
-                shutil.copy(FEATfolder+'/siemens/tfMRI_MID2_hp200_s4_level1.fsf', mid2Folder)
-            else:
-                shutil.copy(FEATfolder+'/GE/tfMRI_MID1_hp200_s4_level1.fsf', mid1Folder)
-                shutil.copy(FEATfolder+'/GE/tfMRI_MID2_hp200_s4_level1.fsf', mid2Folder)
+        # Remove EVs with no events
+        sstEV = {'IncorrectGo':3, 'LateCorrectGo':4, 'LateIncorrectGo':5, 'NoGoResponse':6, 'StopTooEarly':7}
+        for run in {1,2}:
+            for event in sstEV:
+                EVfile = '{0}/{1}-{2}.txt'.format(EVfolder,event,run)
+                fsf = studyFolder + '/MNINonLinear/Results/task-SST0{0}/task-SST0{0}_hp200_s4_level1.fsf'.format(run)
+                checkEV(EVfile, fsf, sstEV[event], verbose=verbose)
+
+        # Create folder for second level analysis and copy the template model file
+        if os.path.exists(studyFolder + '/MNINonLinear/Results/task-SST')==False:
+            os.makedirs(studyFolder + '/MNINonLinear/Results/task-SST')
+        shutil.copy(FEATfolder+'/task-SST_hp200_s4_level2.fsf', studyFolder + '/MNINonLinear/Results/task-SST')
+        nGoodSST += 1
+
+    except IOError:
+        print('********** IOError raised by SST on {0}'.format(subject))
+        nBadSST += 1
+
+    except KeyError:
+        print('********** KeyError raised by SST on {0}'.format(subject))
+        nBadSST += 1
+
+    except ValueError:
+        print('********** ValueError raised by SST on {0}'.format(subject))
+        nBadSST +=1
+
+    except AttributeError:
+        print('********** AttributeError raised by SST on {0}'.format(subject))
+        nBadSST +=1
+
+else:
+    nMissingSST += 1
+
+# Process MID
+mid1Folder = studyFolder + '/MNINonLinear/Results/task-MID01'
+mid2Folder = studyFolder + '/MNINonLinear/Results/task-MID02'
+mid1MR = mid1Folder + MR_path
+mid2MR = mid2Folder + MR_path
+#midEPrime = studyFolder + '/' + subject + '/unprocessed/EPRIME/' + subject + '_tfMRI_MID1.txt'
+midEPrime = eprimeFolder + '/' + subject + '/' + session + '/func/' + subject + '_' + session + '_task-MID_run-01_bold_EventRelatedInformation.txt'
+
+good = True
+for file in {mid1MR, mid2MR, midEPrime}:
+    if os.path.isfile(file)==False:
+        print('No file '+file)
+        good = False
+
+if good:
+    try:
+        # Create censor file for each run
+        propCensor1, scanner = ABCD.createCensorFile(mid1MR)
+        propCensor2, scanner = ABCD.createCensorFile(mid2MR)
+
+        shutil.copy(midEPrime, EVfolder)
+
+        # Create EVs
+        behave = ABCD.EPrimeCSVtoFSL_MID(EVfolder+'/' + subject + '_' + session + '_task-MID_run-01_bold_EventRelatedInformation.txt', verbose=verbose)
+
+        header = ('subject,task,censor1,censor2,' +
+                  'WinBig-Success-1,WinBig-Failure-1,' +
+                  'WinSmall-Success-1,WinSmall-Failure-1,' +
+                  'Neutral-Success-1,Neutral-Failure-1,' +
+                  'LoseSmall-Success-1,LoseSmall-Failure-1,' +
+                  'LoseBig-Success-1,LoseBig-Failure-1,' +
+                  'WinBig-Success-2,WinBig-Failure-2,' +
+                  'WinSmall-Success-2,WinSmall-Failure-2,' +
+                  'Neutral-Success-2,Neutral-Failure-2,' +
+                  'LoseSmall-Success-2,LoseSmall-Failure-2,' +
+                  'LoseBig-Success-2,LoseBig-Failure-2,')
+
+        if os.path.exists('log-mid.csv')==False:
+            with open("log-mid.csv", "w") as out:
+                out.write(header+'\n')
+
+        with open("log-mid.csv", "a") as out:
+            out.write('{0},mid,{1:.3f},{2:.3f},{3}\n'.format(subject,propCensor1, propCensor2, behave))
 
 
-            # Create folder for second level analysis and copy the template model file
-            if os.path.exists(studyFolder + '/' + subject + '/MNINonLinear/Results/tfMRI_MID')==False:
-                os.makedirs(studyFolder + '/' + subject + '/MNINonLinear/Results/tfMRI_MID')
-            shutil.copy(FEATfolder+'/tfMRI_MID_hp200_s4_level2.fsf', studyFolder + '/' + subject + '/MNINonLinear/Results/tfMRI_MID')
+        # Copy template model file
+        if scanner == 'Siemens':
+            shutil.copy(FEATfolder+'/siemens/task-MID01_hp200_s4_level1.fsf', mid1Folder)
+            shutil.copy(FEATfolder+'/siemens/task-MID02_hp200_s4_level1.fsf', mid2Folder)
+        else:
+            shutil.copy(FEATfolder+'/GE/task-MID01_hp200_s4_level1.fsf', mid1Folder)
+            shutil.copy(FEATfolder+'/GE/task-MID02_hp200_s4_level1.fsf', mid2Folder)
 
 
-        except IOError:
-            print('********** IOError raised by MID on {0}'.format(subject))
-
-        except KeyError:
-            print('********** KeyError raised by MID on {0}'.format(subject))
-
-	except ValueError:
-            print('********** ValueError raised by MID on {0}'.format(subject))
-
-	except AttributeError:
-            print('********** AttributeError raised by MID on {0}'.format(subject))
-
-    # Process nBack
-    nBack1Folder = studyFolder + '/' + subject + '/MNINonLinear/Results/tfMRI_nBack1'
-    nBack2Folder = studyFolder + '/' + subject + '/MNINonLinear/Results/tfMRI_nBack2'
-    nBack1MR = nBack1Folder+'/Movement_Regressors_FNL_preproc_v2.txt'
-    nBack2MR = nBack2Folder+'/Movement_Regressors_FNL_preproc_v2.txt'
-    nBackEPrime = studyFolder + '/' + subject + '/unprocessed/EPRIME/' + subject + '_tfMRI_nBack1.txt'
+        # Create folder for second level analysis and copy the template model file
+        if os.path.exists(studyFolder + '/MNINonLinear/Results/task-MID')==False:
+            os.makedirs(studyFolder + '/MNINonLinear/Results/task-MID')
+        shutil.copy(FEATfolder+'/task-MID_hp200_s4_level2.fsf', studyFolder + '/MNINonLinear/Results/task-MID')
 
 
-    good = True
-    for file in {nBack1MR, nBack2MR, nBackEPrime}:
-        if os.path.isfile(file)==False:
-            print('No file '+file)
-            good = False
+    except IOError:
+        print('********** IOError raised by MID on {0}'.format(subject))
 
-    if good:
-        try:
-            # Create censor file for each run
-            propCensor1, scanner = ABCD.createCensorFile(nBack1MR)
-            propCensor2, scanner = ABCD.createCensorFile(nBack2MR)
+    except KeyError:
+        print('********** KeyError raised by MID on {0}'.format(subject))
 
-            shutil.copy(nBackEPrime, EVfolder)
+    except ValueError:
+        print('********** ValueError raised by MID on {0}'.format(subject))
 
-            # Create EVs
-            behave = ABCD.EPrimeCSVtoFSL_nBack(EVfolder+'/' + subject + '_tfMRI_nBack1.txt', verbose=verbose)
+    except AttributeError:
+        print('********** AttributeError raised by MID on {0}'.format(subject))
 
-            header = ('subject,task,censor1,censor2,' +
-                      '0-Back-Acc-1,0-Back-RT-1,2-Back-Acc-1,2-Back-RT-1,' +
-                      '0-Back-Acc-2,0-Back-RT-2,2-Back-Acc-2,2-Back-RT-2,')
+# Process nBack
+nBack1Folder = studyFolder + '/MNINonLinear/Results/task-nback01'
+nBack2Folder = studyFolder + '/MNINonLinear/Results/task-nback02'
+nBack1MR = nBack1Folder + MR_path
+nBack2MR = nBack2Folder + MR_path
+#nBackEPrime = studyFolder + '/' + subject + '/unprocessed/EPRIME/' + subject + '_tfMRI_nBack1.txt'
+nBackEPrime = eprimeFolder + '/' + subject + '/' + session + '/func/' + subject + '_' + session + '_task-nback_run-01_bold_EventRelatedInformation.txt'
 
-            if os.path.exists('log-nback.csv')==False:
-                with open("log-nback.csv", "a") as out:
-                    out.write(header+'\n')
+good = True
+for file in {nBack1MR, nBack2MR, nBackEPrime}:
+    if os.path.isfile(file)==False:
+        print('No file '+file)
+        good = False
+
+if good:
+    try:
+        # Create censor file for each run
+        propCensor1, scanner = ABCD.createCensorFile(nBack1MR)
+        propCensor2, scanner = ABCD.createCensorFile(nBack2MR)
+
+        shutil.copy(nBackEPrime, EVfolder)
+
+        # Create EVs
+        behave = ABCD.EPrimeCSVtoFSL_nBack(EVfolder+'/' + subject + '_' + session + '_task-nback_run-01_bold_EventRelatedInformation.txt', verbose=verbose)
+
+        header = ('subject,task,censor1,censor2,' +
+                  '0-Back-Acc-1,0-Back-RT-1,2-Back-Acc-1,2-Back-RT-1,' +
+                  '0-Back-Acc-2,0-Back-RT-2,2-Back-Acc-2,2-Back-RT-2,')
+
+        if os.path.exists('log-nback.csv')==False:
             with open("log-nback.csv", "a") as out:
-                out.write('{0},nback,{1:.3f},{2:.3f},{3}\n'.format(subject,propCensor1, propCensor2, behave))
+                out.write(header+'\n')
+        with open("log-nback.csv", "a") as out:
+            out.write('{0},nback,{1:.3f},{2:.3f},{3}\n'.format(subject,propCensor1, propCensor2, behave))
 
 
-            # Copy template model file
-            if scanner == 'Siemens':
-                shutil.copy(FEATfolder+'/siemens/tfMRI_nBack1_hp200_s4_level1.fsf', nBack1Folder)
-                shutil.copy(FEATfolder+'/siemens/tfMRI_nBack2_hp200_s4_level1.fsf', nBack2Folder)
-            else:
-                shutil.copy(FEATfolder+'/GE/tfMRI_nBack1_hp200_s4_level1.fsf', nBack1Folder)
-                shutil.copy(FEATfolder+'/GE/tfMRI_nBack2_hp200_s4_level1.fsf', nBack2Folder)
-
-
-
-            # Create folder for second level analysis and copy the template model file
-            if os.path.exists(studyFolder + '/' + subject + '/MNINonLinear/Results/tfMRI_nBack')==False:
-                os.makedirs(studyFolder + '/' + subject + '/MNINonLinear/Results/tfMRI_nBack')
-            shutil.copy(FEATfolder+'/tfMRI_nBack_hp200_s4_level2.fsf', studyFolder + '/' + subject + '/MNINonLinear/Results/tfMRI_nBack')
+        # Copy template model file
+        if scanner == 'Siemens':
+            shutil.copy(FEATfolder+'/siemens/task-nback01_hp200_s4_level1.fsf', nBack1Folder)
+            shutil.copy(FEATfolder+'/siemens/task-nback02_hp200_s4_level1.fsf', nBack2Folder)
+        else:
+            shutil.copy(FEATfolder+'/GE/task-nback01_hp200_s4_level1.fsf', nBack1Folder)
+            shutil.copy(FEATfolder+'/GE/task-nback02_hp200_s4_level1.fsf', nBack2Folder)
 
 
 
-        except IOError:
-            print('********** IOError raised by nBack on {0}'.format(subject))
+        # Create folder for second level analysis and copy the template model file
+        if os.path.exists(studyFolder + '/MNINonLinear/Results/task-nback')==False:
+            os.makedirs(studyFolder + '/MNINonLinear/Results/task-nback')
+        shutil.copy(FEATfolder+'/task-nback_hp200_s4_level2.fsf', studyFolder + '/MNINonLinear/Results/task-nback')
 
-        except KeyError:
-            print('********** KeyError raised by nBack on {0}'.format(subject))
 
-	except ValueError:
-            print('********** ValueError raised by nBack on {0}'.format(subject))
 
-	except AttributeError:
-            print('********** AttributeError raised by nBack on {0}'.format(subject))
+    except IOError:
+        print('********** IOError raised by nback on {0}'.format(subject))
+
+    except KeyError:
+        print('********** KeyError raised by nback on {0}'.format(subject))
+
+    except ValueError:
+        print('********** ValueError raised by nback on {0}'.format(subject))
+
+    except AttributeError:
+        print('********** AttributeError raised by nback on {0}'.format(subject))
 
 
 print('SST Good {0}, Missing {1}, Bad {2}'.format(nGoodSST, nMissingSST, nBadSST))

@@ -7,19 +7,26 @@ from readEPrime import ReadEPrimeFile
 
 
 # Extract a single run from a data frame
-def GetRun(dataFrame, run, verbose=True):
+def GetRun(dataFrame, run, scanner, software_version="NONE", verbose=True):
 
     indexC = dataFrame['Procedure[Trial]'].str.contains('WaitScreen', na=False)
     waitIndex = dataFrame.index[indexC]
 
-    if len(waitIndex)<3:
+    if scanner in ['Siemens', 'Philips']:
         scannerType = "SIEMENS/PHILIPS"
         startIndices = waitIndex
         if run>len(startIndices)-1:
             raise AttributeError('Run not found')
         startTime = dataFrame['SiemensPad.OnsetTime'][startIndices[run]]
 
-    elif (len(waitIndex) % 16) == 0:
+    elif scanner == 'GE' and software_version == 'DV26':
+        scannerType = "GE"
+        startIndices = waitIndex
+        if run>len(startIndices)-1:
+            raise AttributeError('Run not found')
+        startTime = dataFrame['SiemensPad.OnsetTime'][startIndices[run]]
+
+    elif scanner == 'GE' and software_version == 'DV25':
         scannerType = "GE"
         indexC = dataFrame['Procedure[Block]'].str.contains('Cue', na=False)
         startIndices = (dataFrame.index[indexC]-1).intersection(waitIndex) - 5
@@ -28,7 +35,7 @@ def GetRun(dataFrame, run, verbose=True):
         startTime = dataFrame['GetReady.RTTime'][startIndices[run]]
 
     else:
-        raise AttributeError('Run not found')
+        raise AttributeError('Scanner not identified')
 
     if run>len(startIndices):
         print('***** Asked for run {0}, but only {1} runs in file', run, len(startIndices))
@@ -50,7 +57,7 @@ def GetRun(dataFrame, run, verbose=True):
     return subFrame, startTime
 
 
-def EPrimeCSVtoFSL_nBack(filename, verbose=True):
+def EPrimeCSVtoFSL_nBack(filename, scanner, software_version="NONE", verbose=True):
     dataFrame = ReadEPrimeFile(filename)
 
     # We have both GetReady and GetReady2. Combine them.
@@ -69,7 +76,7 @@ def EPrimeCSVtoFSL_nBack(filename, verbose=True):
         if verbose:
             print('Processing run {0}'.format(run))
     
-        subFrame, startTime = GetRun(dataFrame, run, verbose)
+        subFrame, startTime = GetRun(dataFrame, run, scanner, software_version, verbose)
 
         for wm in wmDict:
             wmLoad = subFrame['Procedure[Block]'].str.contains(wmDict[wm], na=False)

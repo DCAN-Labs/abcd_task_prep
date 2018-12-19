@@ -1,4 +1,4 @@
-#!/home/exacloud/lustre1/fnl_lab/code/external/utilities/anaconda2/bin/python
+#!/usr/bin/env python
 
 import os, sys
 import ABCD_tfMRI as ABCD
@@ -47,6 +47,12 @@ print(subject)
 session = 'ses-' + sys.argv[4]
 print("session is:")
 print(session)
+scanner = sys.argv[5]
+software_version = sys.argv[6]
+print('scanner make:')
+print(scanner)
+print('software for GE scanner:')
+print(software_version)
 
 
 # Make an EVs folder and copy the Prime files into it
@@ -76,13 +82,14 @@ for file in {sst1MR, sst2MR, sstEPrime}:
 if good:
     try:
         # Create censor file for each run
-        propCensor1, scanner = ABCD.createCensorFile(sst1MR)
-        propCensor2, scanner = ABCD.createCensorFile(sst2MR)
+        propCensor1 = ABCD.createCensorFile(sst1MR, scanner, software_version)
+        propCensor2 = ABCD.createCensorFile(sst2MR, scanner, software_version)
 
         # Create EVs
         shutil.copy(sstEPrime, EVfolder+'/')
 
-        behave = ABCD.EPrimeCSVtoFSL_SST(EVfolder+'/' + subject + '_' + session +  '_task-SST_run-01_bold_EventRelatedInformation.txt', verbose=verbose)
+        behave = ABCD.EPrimeCSVtoFSL_SST(EVfolder+'/' + subject + '_' + session +  '_task-SST_run-01_bold_EventRelatedInformation.txt', 
+                                         scanner, software_version, verbose=verbose)
 
 
         header = ('subject,task,censor1,censor2,' +
@@ -102,12 +109,15 @@ if good:
 
 
         # Copy template model file, modify if necessary
-        if scanner == 'Siemens':
+        if scanner in ['Siemens', 'Philips'] or software_version == 'DV26':
             shutil.copy(FEATfolder+'/siemens/task-SST01_hp200_s4_level1.fsf', sst1Folder)
             shutil.copy(FEATfolder+'/siemens/task-SST02_hp200_s4_level1.fsf', sst2Folder)
-        else:
+        elif scanner == 'GE':
             shutil.copy(FEATfolder+'/GE/task-SST01_hp200_s4_level1.fsf', sst1Folder)
             shutil.copy(FEATfolder+'/GE/task-SST02_hp200_s4_level1.fsf', sst2Folder)
+        else:
+            print('Scanner not identified!')
+            sys.exit(1)
 
 
         # Remove EVs with no events
@@ -160,13 +170,14 @@ for file in {mid1MR, mid2MR, midEPrime}:
 if good:
     try:
         # Create censor file for each run
-        propCensor1, scanner = ABCD.createCensorFile(mid1MR)
-        propCensor2, scanner = ABCD.createCensorFile(mid2MR)
+        propCensor1 = ABCD.createCensorFile(mid1MR, scanner, software_version)
+        propCensor2 = ABCD.createCensorFile(mid2MR, scanner, software_version)
 
         shutil.copy(midEPrime, EVfolder)
 
         # Create EVs
-        behave = ABCD.EPrimeCSVtoFSL_MID(EVfolder+'/' + subject + '_' + session + '_task-MID_run-01_bold_EventRelatedInformation.txt', verbose=verbose)
+        behave = ABCD.EPrimeCSVtoFSL_MID(EVfolder+'/' + subject + '_' + session + '_task-MID_run-01_bold_EventRelatedInformation.txt',  
+                                         scanner, software_version, verbose=verbose)
 
         header = ('subject,task,censor1,censor2,' +
                   'WinBig-Success-1,WinBig-Failure-1,' +
@@ -189,13 +200,15 @@ if good:
 
 
         # Copy template model file
-        if scanner == 'Siemens':
+        if scanner in ['Siemens', 'Philips'] or software_version == 'DV26':
             shutil.copy(FEATfolder+'/siemens/task-MID01_hp200_s4_level1.fsf', mid1Folder)
             shutil.copy(FEATfolder+'/siemens/task-MID02_hp200_s4_level1.fsf', mid2Folder)
-        else:
+        elif scanner == 'GE':
             shutil.copy(FEATfolder+'/GE/task-MID01_hp200_s4_level1.fsf', mid1Folder)
             shutil.copy(FEATfolder+'/GE/task-MID02_hp200_s4_level1.fsf', mid2Folder)
-
+        else:
+            print('Scanner not identified!')
+            sys.exit(1)
 
         # Create folder for second level analysis and copy the template model file
         if os.path.exists(studyFolder + '/MNINonLinear/Results/task-MID')==False:
@@ -232,13 +245,14 @@ for file in {nBack1MR, nBack2MR, nBackEPrime}:
 if good:
     try:
         # Create censor file for each run
-        propCensor1, scanner = ABCD.createCensorFile(nBack1MR)
-        propCensor2, scanner = ABCD.createCensorFile(nBack2MR)
+        propCensor1 = ABCD.createCensorFile(nBack1MR, scanner, software_version)
+        propCensor2 = ABCD.createCensorFile(nBack2MR, scanner, software_version)
 
         shutil.copy(nBackEPrime, EVfolder)
 
         # Create EVs
-        behave = ABCD.EPrimeCSVtoFSL_nBack(EVfolder+'/' + subject + '_' + session + '_task-nback_run-01_bold_EventRelatedInformation.txt', verbose=verbose)
+        behave = ABCD.EPrimeCSVtoFSL_nBack(EVfolder+'/' + subject + '_' + session + '_task-nback_run-01_bold_EventRelatedInformation.txt',  
+                                           scanner, software_version, verbose=verbose)
 
         header = ('subject,task,censor1,censor2,' +
                   '0-Back-Acc-1,0-Back-RT-1,2-Back-Acc-1,2-Back-RT-1,' +
@@ -252,12 +266,15 @@ if good:
 
 
         # Copy template model file
-        if scanner == 'Siemens':
+        if scanner in ['Siemens', 'Philips'] or software_version == 'DV26':
             shutil.copy(FEATfolder+'/siemens/task-nback01_hp200_s4_level1.fsf', nBack1Folder)
             shutil.copy(FEATfolder+'/siemens/task-nback02_hp200_s4_level1.fsf', nBack2Folder)
-        else:
+        elif scanner == 'GE':
             shutil.copy(FEATfolder+'/GE/task-nback01_hp200_s4_level1.fsf', nBack1Folder)
             shutil.copy(FEATfolder+'/GE/task-nback02_hp200_s4_level1.fsf', nBack2Folder)
+        else:
+            print('Scanner version not identified!')
+            sys.exit(1)
 
 
 

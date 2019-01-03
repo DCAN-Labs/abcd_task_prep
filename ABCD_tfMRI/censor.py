@@ -3,9 +3,10 @@
 import numpy as np
 import sys, math, os
 
-def createCensorFile(filename):
+def createCensorFile(filename, scanner, software_version="NONE"):
     nDiscardSiemens = 8
-    nDiscardGE = 5
+    nDiscardGEDV25 = 5
+    nDiscardGEDV26 = 16
 
     threshold = 0.8
     ignoreY = True
@@ -19,16 +20,19 @@ def createCensorFile(filename):
     mr = np.genfromtxt(filename)
     nTimePoints = mr.shape[0]
 
-    if nTimePoints in {367, 442, 408}:
-        scanner = 'GE'
-        nDiscard = nDiscardGE
-    elif nTimePoints in {370, 445, 411}:
-        scanner = 'Siemens'
+    # set number of frames to censor from cifti time series
+    if scanner == 'GE':
+        if software_version == 'DV25':
+            nDiscard = nDiscardGEDV25
+        elif software_version == 'DV26'
+            nDiscard = nDiscardGEDV26
+        else:
+            print('scanner software must be provided for GE: {}'.format(software_version))
+    elif scanner in ['Siemens', 'Philips']:
         nDiscard = nDiscardSiemens
     else:
-        print('***** {0} TRs does not match'.format(nTimePoints))
-        scanner = 'Unknown'
-        nDiscard = 8
+        print('Scanner not identified {} GE software: {}'.format(scanner, software_version))
+        sys.exit(1)
 
 
     #print(nTimePoints)
@@ -77,7 +81,7 @@ def createCensorFile(filename):
             j=j+1
     np.savetxt(path+'/censor.txt', matrix, delimiter='\t', fmt='%d')
 
-    return prop, scanner
+    return prop
 
 if __name__ == "__main__":
     createCensorFile(sys.argv[1])

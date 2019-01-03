@@ -19,17 +19,14 @@ def GetRun(dataFrame, run, scanner, software_version="NONE", verbose=True):
             raise AttributeError('Run not found')
         startTime = dataFrame['SiemensPad.OnsetTime'][startIndices[run]]
 
-    elif scanner == 'GE' and software_version == 'DV26':
-        scannerType = "GE"
-        startIndices = waitIndex
-        if run>len(startIndices)-1:
-            raise AttributeError('Run not found')
-        startTime = dataFrame['SiemensPad.OnsetTime'][startIndices[run]]
-
-    elif scanner == 'GE' and software_version == 'DV25':
+    elif scanner == 'GE':
         scannerType = "GE"
         indexC = dataFrame['Procedure[Block]'].str.contains('Cue', na=False)
-        startIndices = (dataFrame.index[indexC]-1).intersection(waitIndex) - 5
+        if software_version == 'DV25':
+            drop_frames = 5
+        elif software_version == 'DV26':
+            drop_frames = 16
+        startIndices = (dataFrame.index[indexC]-1).intersection(waitIndex) - drop_frames
         if run>len(startIndices)-1:
             raise AttributeError('Run not found')
         startTime = dataFrame['GetReady.RTTime'][startIndices[run]]

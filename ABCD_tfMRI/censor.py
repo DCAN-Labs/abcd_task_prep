@@ -28,7 +28,7 @@ def createCensorFile(filename, scanner, software_version="NONE"):
             nDiscard = nDiscardGEDV26
         else:
             print('scanner software must be provided for GE: {}'.format(software_version))
-    elif scanner in ['Siemens', 'Philips']:
+    elif scanner.title() in ['Siemens', 'Philips']:
         nDiscard = nDiscardSiemens
     else:
         print('Scanner not identified {} GE software: {}'.format(scanner, software_version))

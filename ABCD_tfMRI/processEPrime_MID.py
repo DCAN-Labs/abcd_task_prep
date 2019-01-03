@@ -12,7 +12,7 @@ def GetRun(dataFrame, run, scanner, software_version="NONE", verbose=True):
     indexC = dataFrame['Procedure[Trial]'].str.contains('WaitScreen', na=False)
     waitIndex = dataFrame.index[indexC]
 
-    if scanner in ['Siemens', 'Philips']:
+    if scanner.title() in ['Siemens', 'Philips']:
         scannerType = "SIEMENS/PHILIPS"
         startIndices = waitIndex
         if run>len(startIndices)-1:

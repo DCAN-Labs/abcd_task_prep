@@ -24,7 +24,7 @@ def createCensorFile(filename, scanner, software_version="NONE"):
     if scanner == 'GE':
         if software_version == 'DV25':
             nDiscard = nDiscardGEDV25
-        elif software_version == 'DV26'
+        elif software_version == 'DV26':
             nDiscard = nDiscardGEDV26
         else:
             print('scanner software must be provided for GE: {}'.format(software_version))

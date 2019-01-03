@@ -4,12 +4,11 @@ import os, sys
 import ABCD_tfMRI as ABCD
 import shutil
 
-
-#FEATfolder = '/users/r/w/rwatts1/bin/FEAT'
-#FEATfolder = os.environ["FEATfolder"]
-FEATfolder = '/home/exacloud/lustre1/fnl_lab/code/internal/pipelines/HCP_generic_srun/ABCD_tfMRI/FEAT'
+here = os.path.dirname(os.path.realpath(__file__))
+FEATfolder = os.path.join(here, 'FEAT')
 
 verbose = False
+
 
 def checkEV(filename, fsfname, EV, verbose=True):
     if os.path.isfile(filename)==False:
